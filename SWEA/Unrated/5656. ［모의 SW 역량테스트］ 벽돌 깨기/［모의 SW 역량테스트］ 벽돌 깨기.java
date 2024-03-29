@@ -6,14 +6,14 @@ import java.util.*;
  */
 public class Solution {
     static int N, W, H, T, ans, total;
-    static int[][] input;
+    static int[][] input, board;
     final static int[] dr = { -1, 0, 1, 0 }, dc = { 0, 1, 0, -1 };
 
-    public int shoot(int idx, int board[][]) {
+    public int shoot(int idx) {
         int sum = 0;
         for (int i = 0; i < H; i++) {
             if (board[i][idx] != 0) {
-                sum = pop(i, idx, board);
+                sum = pop(i, idx);
                 break;
             }
         }
@@ -35,7 +35,7 @@ public class Solution {
         return sum;
     }
 
-    public int pop(int row, int col, int board[][]) {
+    public int pop(int row, int col) {
         if (board[row][col] == 0)
             return 0;
         int sum = 1;
@@ -44,55 +44,28 @@ public class Solution {
         for (int d = 0; d < 4; d++) {
             int nr, nc;
             for (int i = 1; i <= range; i++) {
-                // System.out.println("row = " + row + "col = " + col);
                 nr = row + (dr[d] * i);
                 nc = col + (dc[d] * i);
                 if (nr < 0 || nc < 0 || nr >= H || nc >= W)
                     break;
-                sum += pop(nr, nc, board);
+                sum += pop(nr, nc);
             }
         }
         return sum;
     }
 
     public void combination(int level, int count, int tmp[][]) {
-        if (level == N) {
-            // System.out.println(count + " count");
+        if (level == N || count == total) {
             ans = Math.max(ans, count);
             return;
         }
         for (int idx = 0; idx < W; idx++) { // k -> 쏘는 위치
-            int[][] board = new int[H][];
+            board = new int[H][];
             for (int i = 0; i < H; i++) {
                 board[i] = tmp[i].clone();
             }
-
-            int sum = 0;
-            for (int i = 0; i < H; i++) {
-                if (board[i][idx] != 0) {
-
-                    // System.out.println("!@#");
-                    sum = pop(i, idx, board);
-                    break;
-                }
-            }
-
-            for (int i = 0; i < W; i++) {
-                Stack<Integer> stack = new Stack<>();
-                for (int j = 0; j < H; j++) {
-                    if (board[j][i] != 0) {
-                        stack.push(board[j][i]);
-                        board[j][i] = 0;
-                    }
-                }
-                int h = H - 1;
-                while (!stack.empty()) {
-                    board[h][i] = stack.pop();
-                    h--;
-                }
-            }
-            // System.out.println(sum + " !!");
-            if (sum != 0 || count == total) {
+            int sum = shoot(idx);
+            if (sum != 0) {
                 combination(level + 1, count + sum, board);
             }
 
@@ -122,13 +95,6 @@ public class Solution {
                 }
             }
             combination(0, 0, input);
-            // for (int i = 0; i < H; i++) {
-            // for (int j = 0; j < W; j++) {
-            // System.out.print(board[i][j] + " ");
-            // }
-            // System.out.println();
-            // }
-            // System.out.println(ans);
             sb.append("#").append(tc).append(" ").append(total - ans).append("\n");
         }
         System.out.print(sb);
