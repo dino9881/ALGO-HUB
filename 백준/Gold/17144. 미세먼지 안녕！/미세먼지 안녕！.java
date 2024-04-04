@@ -1,166 +1,115 @@
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Scanner;
+import java.util.StringTokenizer;
 
-/**
- * Main
- */
 public class Main {
+    //https://www.acmicpc.net/problem/17144
+    //미세먼지 안녕
+    static int[][] map;
+    static int R, C, T;
+    static int fresher;
 
-    static int R, C, T, ans;
-    static int[][] board;
-    static List<Pair> ac;
-    final static int[] dr = { -1, 0, 1, 0 }, dc = { 0, 1, 0, -1 };
-
-    /**
-     * Pair
-     */
-    public class Pair {
-
-        int row, col;
-
-        Pair(int r, int c) {
-            this.row = r;
-            this.col = c;
-        }
-
-        @Override
-        public String toString() {
-
-            return row + " " + col;
-        }
-    }
-
-    public void print() {
+    public static void diffusion() {
+        int[] dx = {-1, 1, 0, 0};
+        int[] dy = {0, 0, 1, -1};
+        int[][] afterDiffusion = new int[R][C];
         for (int i = 0; i < R; i++) {
             for (int j = 0; j < C; j++) {
-                System.out.print(board[i][j] + " ");
-            }
-            System.out.println();
-        }
-    }
-
-    public void check() {
-        for (int i = 0; i < R; i++) {
-            for (int j = 0; j < C; j++) {
-                if (board[i][j] > 0) {
-                    ans += board[i][j];
+                if (map[i][j] <= 0) continue;
+                int diffusionCount = 0;
+                int diffusionAmount = map[i][j] / 5;
+                for (int k = 0; k < 4; k++) {
+                    int nextI = i + dx[k];
+                    int nextJ = j + dy[k];
+                    if (nextI < 0 || nextJ < 0 || nextI >= R || nextJ >= C) continue;
+                    if (map[nextI][nextJ] == -1) continue;
+                    diffusionCount++;
+                    afterDiffusion[nextI][nextJ] += diffusionAmount;
                 }
+                map[i][j] -= diffusionCount * diffusionAmount;
             }
         }
-        System.out.println(ans);
-    }
-
-    public void spread() {
-        List<Pair> dusts = new ArrayList<>();
         for (int i = 0; i < R; i++) {
             for (int j = 0; j < C; j++) {
-                if (board[i][j] > 0) {
-                    dusts.add(new Pair(i, j));
-                }
+                if (map[i][j] == -1) continue;
+                map[i][j] += afterDiffusion[i][j];
             }
         }
-        int[][] copy = new int[R][C];
+    }
+
+    public static void moveDown(int j, int startI, int endI) {
+        for (int i = endI; i > startI; i--) {
+            map[i][j] = map[i - 1][j];
+            map[i - 1][j] = 0;
+        }
+    }
+
+    public static void moveUp(int j, int startI, int endI) {
+        for (int i = endI; i < startI; i++) {
+            map[i][j] = map[i + 1][j];
+            map[i + 1][j] = 0;
+        }
+    }
+
+    public static void moveLeft(int i, int startJ, int endJ) {
+        for (int j = endJ; j < startJ; j++) {
+            map[i][j] = map[i][j + 1];
+            map[i][j + 1] = 0;
+        }
+    }
+
+    public static void moveRight(int i, int startJ, int endJ) {
+        for (int j = endJ; j > startJ; j--) {
+            map[i][j] = map[i][j - 1];
+            map[i][j - 1] = 0;
+        }
+    }
+
+    public static void circular() {
+        int upFresher = fresher - 1;
+        int downFresher = fresher;
+        moveDown(0, 0, upFresher - 1);
+        moveUp(0, R - 1, downFresher + 1);
+        moveLeft(0, C - 1, 0);
+        moveLeft(R - 1, C - 1, 0);
+        moveDown(C - 1, downFresher, R - 1);
+        moveUp(C - 1, upFresher, 0);
+        moveRight(upFresher, 1, C - 1);
+        moveRight(downFresher, 1, C - 1);
+    }
+
+    public static int solution() {
+        while (T > 0) {
+            T--;
+            diffusion();
+            circular();
+        }
+        int ans = 0;
         for (int i = 0; i < R; i++) {
-            copy[i] = board[i].clone();
-        }
-        for (Pair p : dusts) {
-            int r = p.row;
-            int c = p.col;
-            int count = 0;
-            for (int d = 0; d < 4; d++) {
-                int nr = r + dr[d];
-                int nc = c + dc[d];
-                if (nr < 0 || nc < 0 || nr >= R || nc >= C || board[nr][nc] == -1)
-                    continue;
-                count++;
-                copy[nr][nc] += board[r][c] / 5;
+            for (int j = 0; j < C; j++) {
+                if (map[i][j] == -1) continue;
+                ans += map[i][j];
             }
-            copy[r][c] -= (board[r][c] / 5) * count;
         }
-        board = copy;
+        return ans;
     }
 
-    public void ac() {
-        Pair[] up = { new Pair(0, 1), new Pair(-1, 0), new Pair(0, -1), new Pair(1, 0) },
-                down = { new Pair(0, 1), new Pair(1, 0), new Pair(0, -1), new Pair(-1, 0) };
-        Pair upAC = ac.get(0);
-        Pair downAC = ac.get(1);
-
-        int r = upAC.row;
-        int c = upAC.col;
-        int d = 0;
-        int val = 0;
-        while (true) {
-            Pair dir = up[d];
-            int nr = r + dir.row;
-            int nc = c + dir.col;
-            if (nr < 0 || nc < 0 || nr >= R || nc >= C) {
-                d++;
-                continue;
-            }
-            if (board[nr][nc] == -1) {
-                break;
-            }
-            int tmp = board[nr][nc];
-            board[nr][nc] = val;
-            val = tmp;
-            r = nr;
-            c = nc;
-        }
-
-        r = downAC.row;
-        c = downAC.col;
-        d = 0;
-        val = 0;
-        while (true) {
-            Pair dir = down[d];
-            int nr = r + dir.row;
-            int nc = c + dir.col;
-            if (nr < 0 || nc < 0 || nr >= R || nc >= C) {
-                d++;
-                continue;
-            }
-            if (board[nr][nc] == -1) {
-                break;
-            }
-            int tmp = board[nr][nc];
-            board[nr][nc] = val;
-            val = tmp;
-            r = nr;
-            c = nc;
-        }
-
-    }
-
-    public void solution() throws Exception {
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st = new StringTokenizer(br.readLine());
+    public static void main(String[] args) throws IOException {
+        BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st = new StringTokenizer(bf.readLine());
         R = Integer.parseInt(st.nextToken());
         C = Integer.parseInt(st.nextToken());
         T = Integer.parseInt(st.nextToken());
-
-        board = new int[R][C];
-        ac = new ArrayList<>();
+        map = new int[R][C];
         for (int i = 0; i < R; i++) {
-            st = new StringTokenizer(br.readLine());
+            st = new StringTokenizer(bf.readLine());
             for (int j = 0; j < C; j++) {
-                board[i][j] = Integer.parseInt(st.nextToken());
-                if (board[i][j] == -1 && ac.size() == 0) {
-                    ac.add(new Pair(i, j));
-                    ac.add(new Pair(i + 1, j));
-                }
+                map[i][j] = Integer.parseInt(st.nextToken());
+                if (map[i][j] == -1) fresher = i;
             }
         }
-        for (int i = 0; i < T; i++) {
-            spread();
-            ac();
-        }
-        // System.out.println();
-        check();
-
-    }
-
-    public static void main(String[] args) throws Exception {
-        new Main().solution();
+        System.out.println(solution());
     }
 }
