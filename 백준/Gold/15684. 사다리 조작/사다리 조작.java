@@ -50,6 +50,12 @@ public class Main {
                         int t0 = lad[i][j - 1];
                         int t1 = lad[i][j];
                         int t2 = lad[i][j + 1];
+                        // 되돌아 오는거
+                        int t3 = -1;
+                        if (i < H)
+                            t3 = lad[i + 1][j];
+                        if (i < H && lad[i + 1][j] == 0)
+                            lad[i + 1][j] = -1;
                         // 놓기
                         lad[i][j] = 1;
                         lad[i][j - 1] = -1;
@@ -58,6 +64,8 @@ public class Main {
                         lad[i][j] = t1;
                         lad[i][j - 1] = t0;
                         lad[i][j + 1] = t2;
+                        if (i < H)
+                            lad[i + 1][j] = t3;
                     }
                 }
             }
