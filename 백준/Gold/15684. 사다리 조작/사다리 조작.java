@@ -42,7 +42,7 @@ public class Main {
             return;
         }
         // 안맞으면 사다리를 놓아본다.
-        if (count < 3) {
+        if (count < ans - 1) {
             for (int i = 1; i <= H; i++) {
                 for (int j = 1; j < N; j++) {
                     // System.out.println("!@");
@@ -92,9 +92,9 @@ public class Main {
             lad[a][b + 1] = -1;
         }
         // System.out.println(Arrays.deepToString(lad));
-        ans = H + 1;
+        ans = 4;
         bt(0);
-        System.out.println(ans == H + 1 ? -1 : ans);
+        System.out.println(ans == 4 ? -1 : ans);
     }
 
     public static void main(String[] args) throws Exception {
